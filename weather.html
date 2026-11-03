@@ -1,13 +1,17 @@
+<button id="btn">Узнать погоду в Москве</button>
+<p id="result">Тут будет погода</p>
 
+<script>
     let btn = document.getElementById("btn");
     let result = document.getElementById("result");
 
     btn.onclick = function() {
         result.innerText = "Загружаю... ⏳"; 
         
-        // Мокинг (симуляция ответа от сервера)
+        // Симуляция ответа от сервера
         setTimeout(function() {
-            let temp = Math.floor(Math.random() * 20) + 5; // Случайная температура от 5 до 25
+            let temp = Math.floor(Math.random() * 20) + 5; // Случайная температура
             result.innerText = "Температура в Москве: " + temp + "°C 🌡️";
-        }, 1000); // Ждем 1 секунду (как будто грузим из сети)
+        }, 1000); 
     }
+</script>
