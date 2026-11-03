@@ -1,24 +1,13 @@
 
-<button id="btn">Узнать погоду в Москве</button>
-<p id="result">Тут будет погода</p>
-
-<script>
     let btn = document.getElementById("btn");
     let result = document.getElementById("result");
 
     btn.onclick = function() {
-        result.innerText = "Загружаю... ⏳"; // Показываем, что идет загрузка
+        result.innerText = "Загружаю... ⏳"; 
         
-        // Стучимся на сервер погоды (API)
-        fetch('https://api.open-meteo.com/v1/forecast?latitude=55.75&longitude=37.61&current_weather=true')
-            .then(response => response.json()) // Получаем ответ в формате JSON
-            .then(data => {
-                // Достаем температуру из ответа
-                let temp = data.current_weather.temperature;
-                result.innerText = "Температура в Москве: " + temp + "°C 🌡️";
-            })
-            .catch(error => {
-                result.innerText = "Ошибка! Интернет сломался? 😢";
-            });
+        // Мокинг (симуляция ответа от сервера)
+        setTimeout(function() {
+            let temp = Math.floor(Math.random() * 20) + 5; // Случайная температура от 5 до 25
+            result.innerText = "Температура в Москве: " + temp + "°C 🌡️";
+        }, 1000); // Ждем 1 секунду (как будто грузим из сети)
     }
-</script>
