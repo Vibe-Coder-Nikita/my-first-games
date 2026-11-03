@@ -1,0 +1,12 @@
+<button id="myButton">Кликни меня</button>
+<p>Счет: <span id="score">0</span></p>
+
+<script>
+  let score = 0;
+  let button = document.getElementById("myButton");
+  
+  button.onclick = function() {
+    score = score + 1;
+    document.getElementById("score").innerText = score;
+  };
+</script>

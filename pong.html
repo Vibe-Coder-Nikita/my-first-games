@@ -1,0 +1,74 @@
+<canvas id="pongCanvas" width="600" height="400" style="border: 2px solid white; background: black;"></canvas>
+
+<script>
+    let canvas = document.getElementById("pongCanvas");
+    let ctx = canvas.getContext("2d");
+
+    let p1_y = 150; // Левый игрок (W/S)
+    let p2_y = 150; // Правый игрок (Стрелки)
+    let paddleHeight = 100;
+    let paddleWidth = 10;
+
+    let ballX = 300;
+    let ballY = 200;
+    let ballDX = 4; 
+    let ballDY = 4; 
+    let ballSize = 10;
+
+    // Теперь мы запоминаем, какие клавиши нажаты
+    let keys = {};
+
+    document.addEventListener("keydown", function(event) {
+        keys[event.key] = true;
+        // Запрещаем стрелкам скроллить страницу
+        if (event.key.startsWith("Arrow")) event.preventDefault();
+    });
+
+    document.addEventListener("keyup", function(event) {
+        keys[event.key] = false;
+    });
+
+    // Игровой цикл (60 кадров в секунду)
+    setInterval(function() {
+        // Движение ракеток (проверяем, зажата ли клавиша)
+        if (keys["w"] || keys["W"]) p1_y -= 7;
+        if (keys["s"] || keys["S"]) p1_y += 7;
+        if (keys["ArrowUp"]) p2_y -= 7;
+        if (keys["ArrowDown"]) p2_y += 7;
+
+        // Не даем ракеткам улететь за экран
+        if (p1_y < 0) p1_y = 0;
+        if (p1_y > 400 - paddleHeight) p1_y = 400 - paddleHeight;
+        if (p2_y < 0) p2_y = 0;
+        if (p2_y > 400 - paddleHeight) p2_y = 400 - paddleHeight;
+
+        // Физика мяча
+        ballX += ballDX;
+        ballY += ballDY;
+
+        if (ballY <= 0 || ballY >= 400 - ballSize) ballDY = -ballDY;
+
+        if (ballX <= 10 && ballY > p1_y && ballY < p1_y + paddleHeight) ballDX = -ballDX;
+        if (ballX >= 600 - 10 - ballSize && ballY > p2_y && ballY < p2_y + paddleHeight) ballDX = -ballDX;
+
+        if (ballX < 0 || ballX > 600) {
+            ballX = 300;
+            ballY = 200;
+            ballDX = -ballDX;
+        }
+
+        // Отрисовка
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, 600, 400);
+
+        ctx.fillStyle = "white";
+        ctx.fillRect(10, p1_y, paddleWidth, paddleHeight);
+        ctx.fillRect(600 - 10 - paddleWidth, p2_y, paddleWidth, paddleHeight);
+
+        ctx.fillStyle = "cyan";
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+    }, 1000 / 60); 
+</script>

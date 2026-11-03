@@ -1,0 +1,19 @@
+<button id="btn">Кликни меня</button>
+<p>Очки: <span id="score">0</span></p>
+
+<script>
+    let btn = document.getElementById("btn");
+    let scoreSpan = document.getElementById("score");
+
+    // Загружаем сохраненный счет или ставим 0
+    let points = localStorage.getItem("myScore") || 0;
+    points = Number(points);
+    scoreSpan.innerText = points;
+
+    // При клике прибавляем и сохраняем
+    btn.onclick = function() {
+        points = points + 1;
+        scoreSpan.innerText = points;
+        localStorage.setItem("myScore", points); 
+    }
+</script>

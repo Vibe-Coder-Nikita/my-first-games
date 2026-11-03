@@ -1,0 +1,14 @@
+<button onclick="generate()">Отмазаться</button>
+<p id="result">Тут будет отмазка</p>id="result"
+<script>
+  function generate() {
+    let excuses = [
+      "Кот съел тетрадь",
+      "НЛО украло дневник",
+      "Домашку съел мой младший брат",
+      "Я спасал мир в Майнкрафте и забыл"
+    ];
+    let randomIndex = Math.floor(Math.random() * excuses.length);
+    document.getElementById("result").innerText = excuses[randomIndex];
+  }
+</script>
