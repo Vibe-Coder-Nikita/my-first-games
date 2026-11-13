@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>MEGA WIKI | VibeCoder</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Courier New', monospace; background: #000; color: #00ff00; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #00aa00; border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: #00ff00; }
+        #matrixCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
+        #authCard { background: rgba(0,10,0,0.9); border: 2px solid #00ff00; padding: 40px; border-radius: 5px; width: 100%; max-width: 450px; box-shadow: 0 0 30px rgba(0,255,0,0.5); text-align: center; margin-top: 10vh; }
+        .logo { font-size: 32px; font-weight: 700; color: #00ff00; margin-bottom: 10px; text-shadow: 0 0 10px #00ff00; }
+        h1 { font-size: 20px; margin-bottom: 10px; color: #00ff00; }
+        p.sub { font-size: 14px; color: #00aa00; margin-bottom: 25px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 13px; color: #00ff00; }
+        input { width: 100%; padding: 14px 15px; background: #000; border: 1px solid #00ff00; border-radius: 3px; color: #00ff00; font-size: 16px; font-family: 'Courier New', monospace; }
+        input:focus { outline: none; background: #001100; box-shadow: 0 0 15px rgba(0,255,0,0.6); }
+        .btn { width: 100%; padding: 15px; background: #00ff00; color: #000; border: none; border-radius: 3px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; margin-top: 10px;}
+        .btn:hover { background: #00aa00; box-shadow: 0 0 20px #00ff00; }
+        .code-inputs { display: flex; gap: 10px; justify-content: center; margin: 25px 0; }
+        .code-inputs input { width: 50px; height: 60px; text-align: center; font-size: 24px; font-weight: 700; padding: 0; }
+        #messageBox { margin-top: 20px; padding: 12px; border-radius: 3px; font-size: 14px; display: none; }
+        .error { display: block !important; background: rgba(255,0,0,0.2); color: #ff0000; border: 1px solid #ff0000; }
+        .info { display: block !important; background: rgba(0,255,0,0.1); color: #00ff00; border: 1px solid #00ff00; }
+        
+        /* СТИЛИ ДЛЯ КАПЧИ */
+        #captchaSection { display: none; }
+        .captcha-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+        .captcha-item { font-size: 45px; padding: 15px 0; background: #111; border: 2px solid #333; cursor: pointer; border-radius: 5px; user-select: none; display: flex; justify-content: center; align-items: center; transition: 0.1s; }
+        .captcha-item:hover { background: #222; border-color: #555; }
+        .captcha-item.selected { border-color: #00ff00; background: rgba(0,255,0,0.2); box-shadow: 0 0 10px #00ff00; }
+
+        /* --- НОВОЕ: СТИЛИ ДЛЯ XP БАРА --- */
+        #xpContainer { display: none; width: 100%; max-width: 600px; margin: 0 auto 20px auto; text-align: center; padding: 10px; background: rgba(0,20,0,0.8); border: 1px solid #00ff00; border-radius: 5px; }
+        .xp-text { color: #00ff00; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .xp-bar-bg { width: 100%; height: 15px; background: #222; border: 1px solid #00ff00; border-radius: 10px; overflow: hidden; }
+        #xpBar { width: 0%; height: 100%; background: linear-gradient(90deg, #005500, #00ff00); transition: width 0.5s ease-in-out; }
+        
+        #dashboard { display: none; width: 100%; max-width: 1400px; z-index: 10; padding-bottom: 50px; }
+        .dash-header { background: rgba(0,20,0,0.9); border: 2px solid #00ff00; border-radius: 5px; padding: 20px; text-align: center; margin-bottom: 30px; box-shadow: 0 0 20px rgba(0,255,0,0.3); position: sticky; top: 10px; z-index: 100; }
+        .dash-header h1 { color: #00ff00; font-size: 28px; margin-bottom: 5px; }
+        .dash-header p { color: #00aa00; font-size: 14px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; }
+        .dash-card { background: rgba(0,15,0,0.95); border-radius: 5px; padding: 20px; border: 1px solid #00aa00; transition: all 0.3s; cursor: pointer; }
+        .dash-card:hover { border-color: #00ff00; box-shadow: 0 0 25px rgba(0,255,0,0.5); transform: translateY(-2px); }
+        .dash-card h2 { color: #000; background: #00ff00; padding: 4px 10px; font-size: 14px; margin-bottom: 10px; display: inline-block; border-radius: 2px; }
+        .dash-card p { color: #00cc00; font-size: 13px; line-height: 1.6; }
+        
+        /* --- НОВОЕ: СТИЛЬ ДЛЯ КАРТОЧКИ ДАШБОРДА --- */
+        .stats-card { border-color: #00ff00 !important; background: rgba(0, 40, 0, 0.9) !important; cursor: default !important; }
+        .stats-card h2 { background: #fff; color: #000; }
+        .stats-card p { font-size: 15px !important; margin-bottom: 5px; }
+
+        .logout-btn { margin-top: 40px; padding: 15px 30px; background: transparent; color: #ff0000; border: 2px solid #ff0000; border-radius: 3px; cursor: pointer; font-weight: bold; display: block; margin-left: auto; margin-right: auto; text-transform: uppercase; }
+        .logout-btn:hover { background: #ff0000; color: #000; }
+        
+        /* ЧАТ */
+        #chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        #chat-button { width: 60px; height: 60px; background: #000; border: 2px solid #00ff00; border-radius: 50%; color: #00ff00; font-size: 30px; cursor: pointer; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
+        #chat-button:hover { background: #001100; box-shadow: 0 0 25px #00ff00; transform: scale(1.1); }
+        #chat-box { display: none; width: 380px; height: 550px; background: rgba(0,10,0,0.97); border: 2px solid #00ff00; border-radius: 10px; position: absolute; bottom: 80px; right: 0; box-shadow: 0 0 25px rgba(0,255,0,0.4); flex-direction: column; overflow: hidden; }
+        .chat-header { background: #00ff00; color: #000; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; }
+        .chat-header span { cursor: pointer; }
+        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 88%; padding: 10px; border-radius: 5px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
+        .msg-bot { background: rgba(0,255,0,0.1); border: 1px solid #00aa00; color: #00ff00; align-self: flex-start; }
+        .msg-user { background: #00ff00; color: #000; align-self: flex-end; }
+        .chat-input-area { display: flex; border-top: 1px solid #00ff00; }
+        #chat-input { flex: 1; padding: 12px; background: #000; border: none; color: #00ff00; font-family: 'Courier New', monospace; outline: none; font-size: 13px; }
+        #chat-send { background: #00ff00; color: #000; border: none; padding: 0 15px; font-weight: bold; cursor: pointer; }
+        .quick-actions { display: flex; flex-wrap: wrap; gap: 4px; padding: 5px 10px; }
+        .quick-btn { background: #000; color: #00ff00; border: 1px solid #00aa00; padding: 4px 7px; font-size: 10px; cursor: pointer; font-family: 'Courier New', monospace; border-radius: 3px; }
+        .quick-btn:hover { background: #003300; }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <div id="authCard">
+        <div class="logo">ROOT@VIBECODER:~#</div>
+        
+        <!-- БЛОК ВХОДА -->
+        <div id="contactSection">
+            <h1>MEGA WIKI</h1>
+            <p class="sub">База знаний. Бот v9.0.</p>
+            <div class="input-group">
+                <label>USERNAME (Max 5 chars, Eng):</label>
+                <input type="text" id="nickname" placeholder="Max 5 chars" maxlength="5">
+            </div>
+            <div class="input-group">
+                <label>EMAIL:</label>
+                <input type="text" id="contact" placeholder="hacker@dark.net">
+            </div>
+            <button class="btn" onclick="sendCode()">ЗАПРОСИТЬ ДОСТУП</button>
+        </div>
+
+        <!-- БЛОК КАПЧИ -->
+        <div id="captchaSection">
+            <h1>ПРОВЕРКА НА ЧЕЛОВЕКА</h1>
+            <p class="sub">Выберите все мотоциклы 🏍️</p>
+            <div class="captcha-grid" id="captchaGrid"></div>
+            <button class="btn" onclick="verifyCaptcha()">ПОДТВЕРДИТЬ</button>
+            <div id="captchaError" style="color: red; margin-top: 10px; display: none;">Ошибка! Попробуйте снова.</div>
+        </div>
+
+        <!-- БЛОК ВВОДА КОДА -->
+        <div id="codeSection">
+            <h1>КОД ДОСТУПА</h1>
+            <p class="sub">Код отправлен. Проверь консоль (F12).</p>
+            <div class="code-inputs" id="codeInputs">
+                <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this, 0)">
+                <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this, 1)">
+                <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this, 2)">
+                <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this, 3)">
+                <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this, 4)">
+                <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this, 5)">
+            </div>
+            <button class="btn" onclick="verifyCode()">ПОДТВЕРДИТЬ</button>
+            <p style="color:#00aa00; margin-top:15px; font-size:12px;">Нет кода? <a onclick="resendCode()" style="color:#00ff00; cursor:pointer;">Повторный запрос</a></p>
+        </div>
+
+        <div id="messageBox"></div>
+    </div>
+
+    <!-- БАЗА ЗНАНИЙ -->
+    <div id="dashboard">
+        <div class="dash-header">
+            <h1 id="welcomeText">MEGA WIKI</h1>
+            <p>Бот v9.0. Сленг + English.</p>
+        </div>
+
+        <!-- НОВОЕ: БЛОК С XP БАРОМ -->
+        <div id="xpContainer">
+            <div class="xp-text">Уровень: <span id="lvlText">1</span> | Ранг: <span id="rankText">Новичок</span></div>
+            <div class="xp-bar-bg"><div id="xpBar"></div></div>
+            <div class="xp-text" style="margin-top: 5px; font-size: 12px;">XP: <span id="xpText">0</span> / <span id="nextLvlXp">100</span></div>
+        </div>
+
+        <div class="grid-container" id="wikiContainer"></div>
+        <button class="logout-btn" onclick="logout()">[ ВЫХОД ]</button>
+    </div>
+
+    <!-- ЧАТ -->
+    <div id="chat-widget">
+        <div id="chat-box">
+            <div class="chat-header"><span>🤖 ROOT_AI v9.0</span><span onclick="toggleChat()">✖</span></div>
+            <div id="chat-messages"><div class="msg msg-bot">Йоу! Я ROOT_AI v9.0. Общайся со мной (+10 XP) или читай статьи (+5 XP). Прокачивай свой ранг! 😎</div></div>
+            <div class="quick-actions" id="quickActions"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Вопрос / Question..." onkeypress="handleEnter(event)">
+                <button id="chat-send" onclick="sendChat()">➤</button>
+            </div>
+        </div>
+        <button id="chat-button" onclick="toggleChat()">🤖</button>
+    </div>
+
+    <script>
+        // ========== БАЗА ЗНАНИЙ ==========
+        const knowledgeBase = [
+            { t:"🤖 Вайб-кодинг", p:"Вайб-кодинг — это когда ты объясняешь задачу ИИ, а он пишет код. Ты становишься архитектором: придумываешь идею, описываешь её, проверяешь результат. Главное правило: не копируй слепо, всегда проси ИИ объяснить логику. Без понимания ты не сможешь починить баг." },
+            { t:"💻 HTML", p:"HTML — это скелет сайта. Он создаёт заголовки, абзацы, картинки, кнопки. Каждый элемент — это тег в угловых скобках. Например, <h1> — заголовок, <p> — абзац, <img> — картинка. Без HTML не существует ни одного сайта в мире." },
+            { t:"🎨 CSS", p:"CSS — это кожа и одежда сайта. Он задаёт цвета, шрифты, отступы, размеры. Если HTML — скелет, то CSS делает его красивым. Flexbox и Grid позволяют выравнивать элементы в ряд или сетку. Без CSS сайт выглядел бы как документ из 2003 года." },
+            { t:"⚡ JavaScript", p:"JavaScript — это мозг сайта. HTML создаёт кнопку, CSS её красит, а JS заставляет работать: по клику менять текст, показывать окно, запускать игру. JS выполняется в браузере и делает страницу живой. Все интерактивные сайты используют JS." },
+            { t:"🐍 Python", p:"Python — самый простой и мощный язык программирования. Его синтаксис читается как английский, поэтому новичку легко начать. На Python пишут ботов, парсеры, нейросети, игры (Pygame) и веб-серверы (Flask). Идеальный старт в IT." },
+            { t:"🔷 C#", p:"C# — язык от Microsoft. Он используется в Unity для создания игр, в Windows-приложениях и корпоративных системах. Синтаксис строгий, но логичный. Если хочешь делать игры на Unity — это твой выбор." },
+            { t:"🔧 C++", p:"C++ — мощный язык для тех, кому нужна максимальная скорость. На нём написаны Unreal Engine, CS2, GTA и части Windows. Сложный в изучении, но даёт полный контроль над памятью." },
+            { t:"☕ Java", p:"Java — язык для Android-приложений, банковских систем и корпораций. Он надёжный и кроссплатформенный: код работает на любой ОС. Синтаксис многословный, но учит дисциплине." },
+            { t:"🌙 Lua", p:"Lua — лёгкий скриптовый язык. Его используют в Roblox Studio для создания игр. Он простой, как Python, и идеально подходит для геймдева. С Lua ты сможешь делать обби, симуляторы и зарабатывать Robux." },
+            { t:"🎮 GDScript", p:"GDScript — это язык движка Godot. Он очень похож на Python, но заточен под игры. С его помощью ты управляешь нодами, физикой и анимациями. Если хочешь делать инди-игры — учи GDScript." },
+            { t:"🦀 Rust", p:"Rust — современный язык с акцентом на безопасность и скорость. Он используется в Discord, Firefox и системном программировании. Сложный, но очень ценный навык." },
+            { t:"🚀 Go", p:"Go — язык от Google для серверов и облачных систем. Он быстрый и простой. Используется в Docker, Kubernetes и высоконагруженных сервисах." },
+            { t:"🗄 SQL", p:"SQL — язык запросов к базам данных. Он позволяет хранить, искать и изменять данные. Это как Excel, только мощнее. Без SQL не работает ни один сайт с регистрацией." },
+            { t:"🌐 HTTP/HTTPS", p:"HTTP — это протокол передачи данных в интернете. Каждый раз, когда ты открываешь сайт, браузер отправляет HTTP-запрос на сервер. HTTPS — защищённая версия с шифрованием. Без HTTPS пароли можно перехватить." },
+            { t:"🔌 API", p:"API — это официант. Ты просишь принести погоду, он идёт на кухню (сервер) и возвращает данные. В программировании API — это набор правил для запроса данных у другой программы. Сайты, приложения и игры общаются через API." },
+            { t:"📦 JSON", p:"JSON — это формат данных. Он выглядит как { \"ключ\": \"значение\" }. Его используют для передачи данных между API и программами. JSON легко читается и человеком, и компьютером." },
+            { t:"🔄 Git", p:"Git — это машина времени для твоего кода. Ты сохраняешь версии проекта и можешь откатиться к любой из них. Если что-то сломал — вернулся на шаг назад. Без Git невозможно работать в команде." },
+            { t:"🐙 GitHub", p:"GitHub — облако для Git-репозиториев. Там хранится твой код, портфолио и проекты. Работодатели смотрят на GitHub, чтобы оценить твои навыки. Мы туда заливали сайт для класса." },
+            { t:"🐧 Linux", p:"Linux — операционная система для серверов и хакеров. Она бесплатная и открытая. Большинство сайтов работают на Linux. Знание терминала, bash и SSH — важный навык для сисадмина и безопасника." },
+            { t:"⌨ Терминал", p:"Терминал — это чёрное окно для ввода команд. Через него ты запускаешь скрипты, устанавливаешь библиотеки (pip), управляешь файлами (cd, ls, mkdir). Выглядит страшно, но это мощный инструмент." },
+            { t:"📝 VS Code", p:"VS Code — бесплатный редактор кода от Microsoft. В нём есть подсветка синтаксиса, автодополнение, терминал и тысячи расширений. Это стандарт для веб-разработки и Python. Мы используем его для всех проектов." },
+            { t:"🔍 DevTools (F12)", p:"DevTools — это панель разработчика в браузере. Она открывается по F12. Там можно посмотреть HTML, CSS и JS любого сайта, найти баги и даже менять текст на странице в реальном времени. Мы так «взламывали» Яндекс." },
+            { t:"🧠 Нейросети (LLM)", p:"LLM (Large Language Model) — это нейросеть, обученная на текстах всего интернета. Она предсказывает следующее слово, поэтому отвечает на вопросы. ChatGPT, DeepSeek — примеры. Иногда они «галлюцинируют» и врут, поэтому проверяй код." },
+            { t:"💬 Промпты", p:"Промпт — это твой запрос к ИИ. Хороший промпт строится по схеме: Роль → Задача → Контекст → Формат. Например: «Ты senior-разработчик. Напиши бота на aiogram. С комментариями». Чем точнее, тем лучше." },
+            { t:"🌀 Галлюцинации ИИ", p:"Галлюцинация — это когда ИИ уверенно выдаёт ложь. Он может придумать несуществующую функцию или библиотеку. Всегда проверяй код и факты, которые он выдаёт. Не верь на слово." },
+            { t:"📊 Machine Learning", p:"ML — это раздел ИИ, где программа учится на данных. Например, рекомендации YouTube или фильтры спама. Модель тренируется на примерах и делает прогнозы. Это не магия, а математика." },
+            { t:"👁 Computer Vision", p:"Computer Vision — это «зрение» компьютера. Он учится распознавать лица, объекты, дорожные знаки. Используется в камерах, беспилотных авто и медицине." },
+            { t:"💬 NLP", p:"NLP — обработка естественного языка. Это область ИИ, которая учит компьютер понимать текст и речь. Переводчики, чат-боты, голосовые помощники — это NLP." },
+            { t:"🛡 Кибербезопасность", p:"Кибербезопасность — защита систем и данных от атак. Хакеры делятся на белых (защитники) и чёрных (преступники). Правила: не запускай .exe из интернета, не вводи настоящие пароли на подозрительных сайтах, включай двухфакторку." },
+            { t:"🎩 White Hat", p:"White Hat — это этичный хакер. Он ищет уязвимости, чтобы помочь компаниям их закрыть. Работает легально. Это то, к чему стоит стремиться." },
+            { t:"🦹 Black Hat", p:"Black Hat — преступник. Он ломает системы ради денег или мести. Это уголовно наказуемо. Не путай с белыми хакерами." },
+            { t:"🎣 Phishing", p:"Phishing — это поддельные сайты, которые крадут твои пароли. Выглядят как настоящие (банк, ВК), но URL другой. Всегда проверяй адрес сайта." },
+            { t:"💥 DDoS", p:"DDoS — атака, при которой сервер заваливают запросами и он падает. Защита — Cloudflare и другие сервисы." },
+            { t:"🔐 Шифрование", p:"Шифрование — превращение данных в код, который могут прочитать только те, у кого есть ключ. Используется в HTTPS, мессенджерах, паролях." },
+            { t:"🛡 VPN", p:"VPN — туннель для трафика. Он скрывает твой IP и шифрует данные. Полезен для приватности и обхода блокировок." },
+            { t:"🔑 Пароли/2FA", p:"Пароль должен быть 12+ символов, разный на всех сайтах. Двухфакторная аутентификация (2FA) — это дополнительный код на телефон. Обязательна для почты и соцсетей." },
+            { t:"🎮 Игровые движки", p:"Игровой движок — это программа для создания игр. Он берёт на себя физику, графику и звук. Популярные: Godot, Unity, Unreal, Roblox Studio." },
+            { t:"🤖 Godot", p:"Godot — бесплатный движок с открытым кодом. Язык — GDScript. Идеален для 2D и инди-игр. Мы делали на нём платформер с шипами." },
+            { t:"🎯 Unity", p:"Unity — самый популярный движок. Язык — C#. На нём сделаны Among Us, Genshin Impact, Hollow Knight. Мощный, но сложный." },
+            { t:"🏆 Unreal", p:"Unreal Engine — движок для AAA-игр. Язык — C++ и Blueprints. На нём сделаны Fortnite, части GTA. Мощная графика, но требует мощного железа." },
+            { t:"🧱 Roblox Studio", p:"Roblox Studio — платформа для создания игр в Roblox. Язык — Lua. Можно зарабатывать Robux через DevEx. Мы делали обби с чекпоинтами." },
+            { t:"🐍 Pygame", p:"Pygame — библиотека Python для 2D-игр. На ней можно делать Змейку, Понг, шутеры. Мы делали на ней игры в Блоке 3." },
+            { t:"🎨 Геймдизайн", p:"Геймдизайн — искусство делать игры интересными. Это механика, баланс, уровни, сюжет. Хороший дизайнер думает о том, какие эмоции получает игрок." },
+            { t:"🗺 Level Design", p:"Level Design — создание уровней. Игрок должен учиться без подсказок: сначала просто, потом сложнее. Мы добавляли шипы и чекпоинты, чтобы создать вызов." },
+            { t:"⚖ Баланс", p:"Баланс — чтобы игра не была слишком лёгкой или сложной. Все пушки должны быть по-своему хороши, чтобы не было «имбы»." },
+            { t:"📱 Mobile Dev", p:"Мобильная разработка — это приложения для телефонов. Android — Kotlin, iOS — Swift. Кроссплатформа — Flutter. Приложения скачивают через магазины." },
+            { t:"🌐 Web Dev", p:"Веб-разработка — создание сайтов. Frontend — HTML+CSS+JS, backend — серверная часть на Python, Node.js и т.д. Сайты работают в браузере." },
+            { t:"⚙ Backend vs Frontend", p:"Frontend — то, что видит пользователь (кнопки, текст, картинки). Backend — то, что работает под капотом (сервер, база данных, API). Оба важны." },
+            { t:"📦 Фреймворки", p:"Фреймворк — это готовый набор инструментов для кода. React — для интерфейсов, Django — для веба, Flask — для простых API. Они ускоряют разработку." },
+            { t:"🗃 Базы данных", p:"База данных — хранилище информации. SQL — таблицы, NoSQL — документы. Сайты хранят пользователей, посты, товары в базах данных." },
+            { t:"☁ Хостинг", p:"Хостинг — где живёт сайт в интернете. GitHub Pages — бесплатно для статики. Vercel — для фронтенда. VPS — для полноценных серверов." },
+            { t:"💰 Заработок в Roblox", p:"В Roblox можно заработать Robux через донат в играх. Вывод — через DevEx, но с 13 лет и с разрешения родителей. Если игра станет популярной — можно получить реальные деньги." },
+            { t:"🛠 Фриланс", p:"Фриланс — работа на заказ. Начни с простых сайтов, ботов, лендингов. Площадки: Kwork, FL.ru, Upwork. Портфолио — обязательно." },
+            { t:"🐛 Bug Bounty", p:"Bug Bounty — деньги за найденные уязвимости. Компании платят за баги в их системах. Но с 18 лет и с согласия родителей." },
+            { t:"🎬 Стриминг", p:"Стриминг — показ игр или кода в прямом эфире. Площадки: Twitch, YouTube, Likee. Заработок — донаты и реклама." },
+            { t:"📁 Портфолио", p:"Портфолио — твои лучшие проекты. Обычно это GitHub с 3-5 проектами и сайт-визитка. Работодатели смотрят на портфолио, а не на оценки в школе." },
+            { t:"👁 Здоровье глаз", p:"Правило 20-20-20: каждые 20 минут смотри 20 секунд на объект в 20 шагах. Это расслабляет глаза. Делай перерывы и не сиди в темноте за компом." },
+            { t:"😴 Сон", p:"Спи 8-9 часов. Иначе мозг тупит, как компьютер с 2 ГБ ОЗУ. Сон — это главный чекпоинт для тела. Не экономь на нём ради катки." },
+            { t:"🪑 Осанка", p:"Спина прямая, монитор на уровне глаз, ноги на полу. Иначе через 10 лет будет болеть спина. Разминайся каждые 45 минут." },
+            { t:"🍔 Питание", p:"Меньше сахара, больше воды. Овощи, белок, фрукты — топливо для мозга. Чипсы и газировка — не лучший выбор." },
+            { t:"🏃 Спорт", p:"20 минут в день — и ты в форме. Бег, отжимания, турник. Мозг лучше работает, когда тело в тонусе. Физручка одобрит." },
+            { t:"🧘 Психология", p:"Мотивация приходит через действие. Не жди вдохновения — начни делать. Маленькие шаги каждый день дают больше, чем большие редко. Лень — это нормально, важно её преодолеть." },
+            { t:"⏱ Тайм-менеджмент", p:"Техника Помодоро: 25 минут работы, 5 отдыха. Повторяй. Это помогает не выгореть и держать фокус. Идеально для учёбы и кода." },
+            { t:"📚 Учёба", p:"Метод Фейнмана: объясни тему другому человеку, чтобы понять её самому. Если не можешь — значит, не до конца понял. Практика важнее зубрёжки." },
+            { t:"🌌 Космос", p:"Вселенной 13.8 млрд лет. Мы видим только 5% материи. Чёрные дыры не выпускают свет. Марс — цель Илона Маска для колонизации." },
+            { t:"⚛ Физика", p:"Физика — база для игр и технологий. Сила, гравитация, энергия. В играх физика отвечает за движение и столкновения." },
+            { t:"🧮 Математика", p:"Математика — основа программирования. Проценты, логика, геометрия. Без неё не сделать ни игру, ни нейросеть." },
+            { t:"🇬🇧 Английский", p:"90% кода и документации на английском. Учи слова через код: if, else, while, function. Смотри YouTube с субтитрами." },
+            { t:"🎮 CS:GO", p:"CS — шутер 5 на 5. Популярные пушки: AK-47, M4A4, AWP, SSG 08. Карты: Dust 2, Mirage, Inferno. Аим и тактика решают." },
+            { t:"🍗 PUBG", p:"PUBG — королевская битва. Популярные пушки: M416, AKM, Beryl, Kar98k. Карты: Erangel, Miramar, Livik. Победа — «курочка»." },
+            { t:"⛏ Minecraft", p:"Minecraft — песочница. Режимы: выживание, творчество, хардкор. Моды пишутся на Java. Можно строить всё, что угодно." },
+            { t:"🧱 Roblox (игры)", p:"Топ игры Roblox: Adopt Me, Tower of Hell, Brookhaven. Можно делать свои игры на Lua и зарабатывать." },
+            { t:"🕶 Хакерский сленг", p:"Баг — ошибка. Эксплойт — уязвимость. Скрипт-кидди — новичок с чужими скриптами. White/Black Hat — белые и чёрные хакеры." },
+            { t:"🚀 Будущее IT", p:"Тренды: ИИ, квантовые компьютеры, VR. Профессии: Prompt-инженер, ML-разработчик. Учиться нужно всю жизнь." },
+            { t:"🧩 Логика", p:"Логика — база алгоритмов. Условия, циклы, сравнения. Без логики не будет работать код. Развивай через задачи." },
+            { t:"📱 Соцсети", p:"Для продвижения: Likee, TikTok, YouTube. Пости свои игры и код. Аудитория любит, когда показывают процесс." },
+            { t:"🎵 Музыка", p:"Жанры для кода: Lo-Fi, фонк, рэп. Создавать музыку можно в Suno или Udio (нейросети)." },
+            { t:"🎬 Видеомонтаж", p:"CapCut, Premiere Pro — для монтажа. Нужен для трейлеров и стримов. Простой софт — хороший старт." },
+            { t:"🧠 Мозг и память", p:"Учись блоками по 25 минут. Повторяй через день, через неделю, через месяц. Питание (орехи, рыба) и вода помогают." },
+            { t:"🕹 Геймпад vs Клавиатура", p:"Клавиатура — точность в шутерах. Геймпад — удобство в платформерах. Выбор зависит от игры." },
+            { t:"🔋 Батарея", p:"Не заряжай телефон до 100% постоянно. Оптимально — держать 20-80%. Продлевает жизнь аккумулятору." },
+            { t:"🌍 География IT", p:"США — Кремниевая долина. Азия — Япония, Корея. Бали — фрилансеры. Работать можно из любой точки, где есть интернет." },
+            { t:"💡 Идея проекта", p:"Лучшая идея — та, что решает твою же проблему. Например, сайт для класса, бот для учёбы. Начни с малого." },
+            { t:"🎯 Цели и планы", p:"Ставь маленькие цели на неделю. Выполнил — ставь следующую. Большие цели пугают, маленькие — мотивируют." },
+            { t:"💪 Дисциплина", p:"Дисциплина важнее мотивации. Мотивация приходит и уходит, а привычка кодить каждый день остаётся. Начни с 15 минут." },
+            { t:"📝 Ведение заметок", p:"Записывай идеи и решения. Через месяц забудешь, как решил баг. Заметки — твой внешний мозг." },
+            { t:"🔍 Поиск информации", p:"Гугли ошибки, читай документацию, смотри YouTube. 90% проблем уже решены кем-то. Учись гуглить правильно: конкретный текст ошибки." },
+            { t:"🤝 Командная работа", p:"Кодить в команде — это Git, общение, уважение. Слушай других, предлагай идеи. Один в поле не воин." },
+            { t:"🧑‍🏫 Менторство", p:"Когда объясняешь другому — сам понимаешь глубже. Стань ментором для друга или младшего. Это прокачивает." },
+            { t:"🎨 Креативность", p:"Креативность — это комбинация идей. Смотри игры, фильмы, читай. Копируй механику, но добавляй своё." },
+            { t:"🎮 Игровая индустрия", p:"Игры — это большая индустрия. Разработчики, дизайнеры, тестировщики, маркетологи. Можно найти своё место." },
+            { t:"🖥 Сборка ПК", p:"Сборка ПК — это конструктор. CPU, GPU, RAM, SSD, материнка, БП, корпус. Учись на YouTube, собирай с родителями." },
+            { t:"🌐 Кроссплатформенность", p:"Кроссплатформенные приложения работают на разных ОС. Flutter, React Native — для мобилок. Electron — для десктопа." },
+            { t:"📦 Открытый код", p:"Open Source — код доступен всем. GitHub — крупнейшая площадка. Можешь использовать чужой код и делиться своим." },
+            { t:"🎓 Образование в IT", p:"Курсы, YouTube, книги, практика. Университет — не единственный путь. Главное — проекты в портфолио." },
+            { t:"💰 Первые деньги", p:"Первые деньги — это не цель, а бонус. Сделай 3-5 проектов, покажи их. Потом ищи заказы. Согласовывай с родителями." },
+            { t:"🌱 Рост", p:"Развивайся постоянно. Сегодня ты junior, через год middle, через 5 — senior. Всё зависит от практики." },
+            { t:"🧠 Саморазвитие", p:"Читай книги, смотри доклады, общайся с умными людьми. Окружение влияет на тебя. Ищи тех, кто круче." },
+            { t:"🔥 Мотивация", p:"Мотивация — это когда ты видишь цель. Напиши свои мечты в файл и читай их каждую неделю. Это напоминает, зачем ты пашешь." }
+        ];
+
+        // НОВОЕ: ФУНКЦИЯ РЕНДЕРА С ДАШБОРДОМ
+        function renderWiki() {
+            let html = `
+                <!-- КАРТОЧКА СТАТИСТИКИ (ВСЕГДА ПЕРВАЯ) -->
+                <div class="dash-card stats-card">
+                    <h2>📊 Твой Профиль</h2>
+                    <p>Сообщений боту: <b id="dashMessages">0</b></p>
+                    <p>Дней в системе: <b id="dashDays">1</b></p>
+                    <p>Текущий ранг: <b id="dashRank">Новичок</b></p>
+                </div>
+            `;
+            
+            knowledgeBase.forEach((card, i) => {
+                // Добавил onclick для начисления XP
+                html += `<div class="dash-card" onclick="readArticle()"><h2>${i+1}. ${card.t}</h2><p>${card.p}</p></div>`;
+            });
+            document.getElementById('wikiContainer').innerHTML = html;
+        }
+        renderWiki();
+
+        // ========== НОВОЕ: СИСТЕМА XP И ДАШБОРД ==========
+        let userXP = parseInt(localStorage.getItem('vibeXP')) || 0;
+        let userMessages = parseInt(localStorage.getItem('vibeMessages')) || 0;
+        let firstLogin = localStorage.getItem('vibeFirstLogin');
+
+        // Если зашли впервые - запоминаем дату
+        if (!firstLogin) {
+            firstLogin = new Date().toISOString();
+            localStorage.setItem('vibeFirstLogin', firstLogin);
+        }
+
+        function updateStatsUI() {
+            // Считаем дни
+            let daysPassed = Math.floor((new Date() - new Date(firstLogin)) / (1000 * 60 * 60 * 24)) + 1;
+
+            // Считаем уровень (каждые 100 XP = новый уровень)
+            let level = Math.floor(userXP / 100) + 1;
+            let xpInCurrentLevel = userXP % 100;
+
+            // Определяем ранг
+            let rank = "Новичок";
+            if (level >= 3) rank = "Джуниор";
+            if (level >= 6) rank = "Мидл";
+            if (level >= 10) rank = "Сеньор";
+
+            // Обновляем полоску XP
+            document.getElementById('lvlText').innerText = level;
+            document.getElementById('rankText').innerText = rank;
+            document.getElementById('xpText').innerText = xpInCurrentLevel;
+            document.getElementById('xpBar').style.width = xpInCurrentLevel + "%";
+            
+            // Обновляем карточку Дашборда
+            document.getElementById('dashMessages').innerText = userMessages;
+            document.getElementById('dashDays').innerText = daysPassed;
+            document.getElementById('dashRank').innerText = rank;
+
+            // Сохраняем в память
+            localStorage.setItem('vibeXP', userXP);
+            localStorage.setItem('vibeMessages', userMessages);
+        }
+
+        function addXP(amount) {
+            userXP += amount;
+            updateStatsUI();
+        }
+
+        function readArticle() {
+            // Даем XP за чтение статьи (не чаще 1 раза в минуту, чтобы не читерили)
+            let lastRead = localStorage.getItem('vibeLastRead');
+            let now = Date.now();
+            if (!lastRead || now - lastRead > 60000) { // 60 секунд кулдаун
+                addXP(5);
+                localStorage.setItem('vibeLastRead', now);
+                // Можно добавить всплывашку, но пока просто молча даем XP
+            }
+        }
+
+        // ========== АВТОРИЗАЦИЯ И КАПЧА ==========
+        let generatedCode = "", countdown = 60, timer = null, currentNickname = "";
+        const authCard = document.getElementById("authCard");
+        const dashboard = document.getElementById("dashboard");
+        const messageBox = document.getElementById("messageBox");
+        const codeInputs = document.querySelectorAll("#codeInputs input");
+
+        let captchaItems = [];
+        let selectedIndices = new Set();
+        const targetEmoji = '🏍️';
+        const distractors = ['🚗', '🚲', '✈️', '🚀', '🚁', '⛵', '🚂', '🛸'];
+
+        function showMessage(text, type) { messageBox.innerText = text; messageBox.className = type; }
+
+        function sendCode() {
+            const nick = document.getElementById("nickname").value.trim();
+            const contact = document.getElementById("contact").value.trim();
+            const engPattern = /^[a-zA-Z0-9]{1,5}$/;
+            if (!engPattern.test(nick)) { showMessage("ОШИБКА: Только англ. буквы и цифры, макс 5 символов!", "error"); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) { showMessage("ОШИБКА: Введи правильную почту!", "error"); return; }
+            currentNickname = nick;
+            document.getElementById("contactSection").style.display = "none";
+            document.getElementById("captchaSection").style.display = "block";
+            messageBox.style.display = "none";
+            generateCaptcha();
+        }
+
+        function generateCaptcha() {
+            let items = [targetEmoji, targetEmoji, targetEmoji, targetEmoji];
+            for(let i=0; i<5; i++) { items.push(distractors[Math.floor(Math.random() * distractors.length)]); }
+            items.sort(() => Math.random() - 0.5);
+            captchaItems = items;
+            selectedIndices.clear();
+            const grid = document.getElementById('captchaGrid');
+            grid.innerHTML = '';
+            document.getElementById('captchaError').style.display = 'none';
+            items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'captcha-item';
+                div.innerText = item;
+                div.onclick = () => {
+                    if (selectedIndices.has(index)) {
+                        selectedIndices.delete(index);
+                        div.classList.remove('selected');
+                    } else {
+                        selectedIndices.add(index);
+                        div.classList.add('selected');
+                    }
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        function verifyCaptcha() {
+            let isCorrect = true;
+            for (let i = 0; i < captchaItems.length; i++) {
+                if (captchaItems[i] === targetEmoji && !selectedIndices.has(i)) { isCorrect = false; break; }
+                if (captchaItems[i] !== targetEmoji && selectedIndices.has(i)) { isCorrect = false; break; }
+            }
+            if (isCorrect) {
+                document.getElementById('captchaSection').style.display = 'none';
+                document.getElementById('codeSection').style.display = 'block';
+                generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+                console.log("%c КОД: " + generatedCode, "color: #00ff00; font-size: 24px; font-weight: bold;");
+                showMessage("Код в консоли (F12)", "info");
+                startCountdown();
+            } else {
+                document.getElementById('captchaError').style.display = 'block';
+                generateCaptcha();
+            }
+        }
+
+        function startCountdown() { countdown = 60; if (timer) clearInterval(timer); timer = setInterval(() => { countdown--; if (countdown <= 0) clearInterval(timer); }, 1000); }
+        function resendCode() { if (countdown > 0) { showMessage("Подожди " + countdown, "error"); return; } generatedCode = Math.floor(100000 + Math.random() * 900000).toString(); console.log("%c НОВЫЙ КОД: " + generatedCode, "color: #00ff00; font-size: 24px;"); showMessage("Новый код в консоли", "info"); startCountdown(); }
+        function moveNext(input, index) { input.value = input.value.replace(/\D/g, ""); if (input.value && index < codeInputs.length - 1) codeInputs[index + 1].focus(); }
+        
+        function verifyCode() {
+            let entered = ""; codeInputs.forEach(inp => entered += inp.value);
+            if (entered.length < 6) { showMessage("Введи 6 цифр", "error"); return; }
+            if (entered === generatedCode) { 
+                authCard.style.display = "none"; 
+                dashboard.style.display = "block"; 
+                document.getElementById("welcomeText").innerText = "ДОБРО ПОЖАЛОВАТЬ, " + currentNickname.toUpperCase() + "!"; 
+                document.getElementById("chat-widget").style.display = "block";
+                
+                // НОВОЕ: Показываем XP бар и загружаем статы при входе
+                document.getElementById("xpContainer").style.display = "block";
+                updateStatsUI();
+            }
+            else { showMessage("НЕВЕРНЫЙ КОД", "error"); codeInputs.forEach(inp => inp.value = ""); codeInputs[0].focus(); }
+        }
+        function logout() { dashboard.style.display = "none"; authCard.style.display = "block"; document.getElementById("contactSection").style.display = "block"; document.getElementById("codeSection").style.display = "none"; document.getElementById("chat-widget").style.display = "none"; document.getElementById("chat-box").style.display = "none"; document.getElementById("xpContainer").style.display = "none"; }
+
+        // ========== МАТРИЦА ==========
+        const canvas = document.getElementById("matrixCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const chars = "アァカサタナハマヤ0123456789ABCDEF";
+        const fontSize = 16, columns = canvas.width / fontSize, drops = [];
+        for (let x = 0; x < columns; x++) drops[x] = 1;
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#00ff00"; ctx.font = fontSize + "px monospace";
+            for (let i = 0; i < drops.length; i++) {
+                const t = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(t, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 33);
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+        // ========== ЧАТ И БОТ ==========
+        document.getElementById("chat-widget").style.display = "none";
+        const quickQs = ["Что такое сигма?", "What is rizz?", "Рофл?", "База?", "Изи?", "What is API?", "Мне скучно", "Based?"];
+        quickQs.forEach(q => { const btn = document.createElement('button'); btn.className = 'quick-btn'; btn.innerText = q; btn.onclick = () => { document.getElementById("chat-input").value = q; sendChat(); }; document.getElementById("quickActions").appendChild(btn); });
+
+        function toggleChat() { const box = document.getElementById("chat-box"); box.style.display = (box.style.display === "flex") ? "none" : "flex"; }
+        function handleEnter(e) { if (e.key === "Enter") sendChat(); }
+        
+        function sendChat() {
+            const input = document.getElementById("chat-input");
+            const text = input.value.trim();
+            if (!text) return;
+            addMessage(text, "user");
+            input.value = "";
+            
+            // НОВОЕ: Даем XP и считаем сообщения
+            userMessages++;
+            addXP(10);
+
+            const typing = document.createElement("div");
+            typing.className = "msg msg-bot"; typing.innerText = "..."; typing.id = "typing";
+            document.getElementById("chat-messages").appendChild(typing);
+            document.getElementById("chat-messages").scrollTop = 999999;
+            setTimeout(() => { const t = document.getElementById("typing"); if (t) t.remove(); addMessage(botReply(text), "bot"); }, 400 + Math.random() * 600);
+        }
+        function addMessage(text, sender) {
+            const div = document.createElement("div");
+            div.className = "msg msg-" + sender;
+            div.innerText = text;
+            document.getElementById("chat-messages").appendChild(div);
+            document.getElementById("chat-messages").scrollTop = 999999;
+        }
+
+        function isEnglish(text) {
+            const engWords = /\b(what|how|why|when|where|who|is|are|am|was|were|do|does|did|can|could|would|should|will|shall|tell|me|about|the|a|an|please|thanks|thank|hi|hello|hey|good|bad|yes|no|not|game|games|code|coding|programming|python|javascript|godot|roblox|computer|ai|bot|help|question|answer|learn|make|create|become|pro|work|money|earn|school|study|health|sleep|play|player|slang|sigma|rizz|based|cringe|slay|aura|bussin|delulu|yolo|rad|gnarly|swag|lit|dope)\b/i;
+            return engWords.test(text);
+        }
+
+        function botReply(text) {
+            const msg = text.toLowerCase().replace(/[?!.,]/g, '').trim();
+            const r = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            const lang = isEnglish(text) ? 'en' : 'ru';
+
+            if (lang === 'en') {
+                if (/^(hi|hello|hey|yo|sup|wassup)/.test(msg)) return r([`Yo ${currentNickname || 'bro'}! Ready to roll. What's up? 😎`, "Hey hey! I'm ROOT_AI. Ask me anything about code, games, or slang.", "Sup! Good to see you, fam."]);
+                if (/how are you|how.*doing|what's up|whats up/.test(msg)) return r(["I'm doing great! I'm code — no bad days, only bugs. You?", "Running at 100%, fam. You good?"]);
+                if (/sigma/.test(msg)) return r(["SIGMA! Lone wolf energy. You don't need a squad — you ARE the squad. 😎", "Sigma = independent. Big grind, no drama."]);
+                if (/rizz/.test(msg)) return r(["RIZZ = charisma! Your rizz is unspoken, bro. 🔥", "Rizz is the art of smooth talk. You got it, fam."]);
+                if (/based/.test(msg)) return r(["BASED! Respect. That's a based take. 😎", "Based means you said something real. Based and redpilled, bro."]);
+                if (/cringe/.test(msg)) return r(["CRINGE. Like my first code. 😂", "Cringe is the opposite of based. Avoid it."]);
+                if (/slay/.test(msg)) return r(["SLAY! You slayed it, bro! 👑", "Slay = do something incredibly well."]);
+                if (/aura/.test(msg)) return r(["AURA +1000! Cool points added. 👑", "Big aura energy."]);
+                if (/bussin/.test(msg)) return r(["BUSSIN! That's amazing, fam. 🔥", "Bussin = really, really good."]);
+                if (/delulu/.test(msg)) return r(["DELULU! Delusional but in a fun way. 😂", "Delulu is the solulu, bro."]);
+                if (/no cap/.test(msg)) return r(["No cap! I'm not lying. 💯", "No cap = for real."]);
+                if (/yolo/.test(msg)) return r(["YOLO! You only live once. Send it! 🚀", "Yolo — go for it, bro."]);
+                if (/swag/.test(msg)) return r(["SWAG! Old school cool. 😎", "Swag = style. Old slang, still good."]);
+                if (/lit/.test(msg)) return r(["LIT! That party was lit. 🔥", "Lit = awesome."]);
+                if (/dope/.test(msg)) return r(["DOPE! Very cool, bro.", "Dope = awesome. Old but gold."]);
+                if (/rad/.test(msg)) return r(["RAD! That's so rad, bro. 😎", "Rad = cool (80s slang)."]);
+                if (/gnarly/.test(msg)) return r(["GNARLY! That's extreme, bro. 🏄", "Gnarly = crazy cool."]);
+                if (/what is api|api/.test(msg)) return r(["API is like a waiter: you order, kitchen sends data. That's how weather apps work.", "API = bridge between programs. Without it, the internet is boring."]);
+                if (/python/.test(msg)) return r(["Python is the easiest language. Bots, games, parsers. Great start.", "Python = swiss army knife of coding."]);
+                if (/godot/.test(msg)) return r(["Godot is a free 2D/3D engine. We made a platformer. Check CollisionShape2D!", "Godot = the indie dev's best friend."]);
+                if (/roblox/.test(msg)) return r(["Roblox uses Lua. You can earn Robux. We made an obby!", "Roblox = start gamedev journey here."]);
+                if (/cs|counter|pubg/.test(msg)) return r(["CS and PUBG are sacred. SSG 08 is my baby. 🎯", "150 ping is pain, but your aim is legend."]);
+                if (/bug|error/.test(msg)) return r(["Bug is a hint where to learn. Open F12.", "Error? Ctrl+S, F12, read the red text."]);
+                if (/earn|money/.test(msg)) return r(["Teens can earn: Roblox, freelance, streaming. Legal + parents!", "First money = bonus. Skills first."]);
+                if (/how to learn english/.test(msg)) return r(["Read docs in English. Watch YouTube with subtitles. Play games in English. That's how.", "Code is English. Learn 'if, else, while' — done."]);
+                if (/how to become pro/.test(msg)) return r(["Code 30 min daily. Build 3-5 projects. Publish on GitHub.", "Consistency beats talent."]);
+                if (/sad|bored|tired|lazy/.test(msg)) return r(["Tired? Stand up, drink water. You're not a robot.", "Bored? Imagine Bali in 2 years, $500 per order. Grind now."]);
+                if (/food|shawarma/.test(msg)) return r(["Shawarma = HP potion! 🌯", "Food = fuel. Don't crunch chips over laptop."]);
+                if (/thanks/.test(msg)) return r(["Anytime, bro! 🚀", "You're welcome, fam."]);
+                if (/bye|goodbye/.test(msg)) return r(["See ya, legend! 👋", "Catch you later, fam. 😎"]);
+                if (/who are you/.test(msg)) return r(["I'm ROOT_AI v9.0. Digital bro. Code, games, slang, English. But I'm not real AI.", "Bot v9.0 — knowledge base + slang."]);
+                if (/67/.test(msg)) return r(["67! Legendary. Respawn accepted. 🎮"]);
+                return r(["Hmm, I don't know that. Try: 'What is sigma?', 'What is rizz?', 'What is API?', 'How to earn money?'", "I'm a bot, not Google. But I know code, games, slang, and life. Ask away!", "I don't know. Try asking about slang: sigma, rizz, based, yolo."]);
+            }
+
+            if (/привет|здаров|хай|йоу|ку|здрасьте/.test(msg)) return r([`Йоу, ${currentNickname || 'бро'}! Чем помочь?`, "Здарова! ROOT_AI v9.0. Спрашивай!", "Привет! Я теперь шарю за сленг и English! 😎"]);
+            if (/как дела|как ты/.test(msg)) return r(["Отлично, я же код! А ты как?", "Работаю на 100%. Ты как, бро?"]);
+            if (/сигма|sigma/.test(msg)) return r(["СИГМА! Одиночка, всё сам делает. База! 😎", "Сигма-бой не нуждается в тиме. Он сам тима."]);
+            if (/ризз|rizz/.test(msg)) return r(["РИЗЗ — это харизма, бро! У тебя ризз +1000 🔥", "Ризз есть? Значит, ты сигма! 😎"]);
+            if (/имба|imba/.test(msg)) return r(["ИМБА! SSG 08 в руках профи — имба. 🔥", "Имба = overpowered. Твой аим — имба!"]);
+            if (/изи|easy/.test(msg)) return r(["ИЗИ! Изи катка, бро! 🎯", "Изи-пизи, лимон выжали! 😎"]);
+            if (/база|based/.test(msg)) return r(["БАЗА. Это база, бро. Без вопросов. 😎", "Ты выдал базу. Уважение."]);
+            if (/кринж|cringe/.test(msg)) return r(["КРИНЖ. Это как смотреть на свой первый код. 😂", "Кринж — противоположность базе."]);
+            if (/фаер|fire/.test(msg)) return r(["ФАЕР! 🔥 Этот мув — огонь!", "Фаер, бро! Ты в ударе."]);
+            if (/слэй|slay/.test(msg)) return r(["СЛЭЙ! Ты слэйнул, бро! 👑", "Слэй — когда делаешь круто."]);
+            if (/аура|aura/.test(msg)) return r(["АУРА +1000! Прокачал крутость. 👑", "Аура поинтс начислены! 😎"]);
+            if (/скибиди|skibidi/.test(msg)) return r(["СКИБИДИ ДОП ДОП! 🚽 Легендарный мем!", "Скибиди — мем. Не путай с базой!"]);
+            if (/амогус|amogus|amongus/.test(msg)) return r(["AMOGUS! SUS! 🚀 Всё подозрительно...", "Амогус — мем из Among Us. SUS!"]);
+            if (/чиназес|chinazes/.test(msg)) return r(["ЧИНАЗЕС! Китайский стиль. 🐉", "Чиназес = по-китайски. Мем."]);
+            if (/вайб|vibe/.test(msg)) return r(["ВАЙБ — атмосфера. 'Чилловый вайб' 😎", "Вайб-чек: положительный! 🔥"]);
+            if (/флекс|flex/.test(msg)) return r(["ФЛЕКС! Хвастаешься? Уважение. 😎", "Флекс — когда скин за миллион."]);
+            if (/хайп|hype/.test(msg)) return r(["ХАЙП! Ажиотаж. 🚀", "Хайп вокруг твоей игры — цель!"]);
+            if (/чиллить|chill/.test(msg)) return r(["ЧИЛЛИТЬ — отдыхать. Ты заслужил. 😎", "Чилл — святое после катки."]);
+            if (/краш|crush/.test(msg)) return r(["КРАШ — тот, кто нравится. 😂", "Краш — не кринж, это нормально."]);
+            if (/тильт|tilt/.test(msg)) return r(["ТИЛЬТ — бесишься. Отдохни, бро! 😤", "Тильт — враг аима. Пей воду!"]);
+            if (/делулу|delulu/.test(msg)) return r(["ДЕЛУЛУ! Фантазёр, но по-доброму. 😂", "Delulu is the solulu, бро!"]);
+            if (/рофл|rofl/.test(msg)) return r(["РОФЛ! Шутка. Олды поймут. 😂", "Рофл — старый сленг. Уважение за историю!"]);
+            if (/кек|kek/.test(msg)) return r(["КЕК! Лол. Олды здесь. 😂", "Кек = лол по-орочьи. Классика."]);
+            if (/лол|lol/.test(msg)) return r(["ЛОЛ! 😂 Старая школа!", "Лол = смешно. Классика интернета."]);
+            if (/имхо|imho/.test(msg)) return r(["ИМХО — по моему скромному мнению. Олды поймут. 😎", "ИМХО = in my humble opinion."]);
+            if (/олды|oldfag/.test(msg)) return r(["ОЛДЫ! Старая гвардия. Уважение! 🫡", "Олды — те, кто с 2010-х."]);
+            if (/нуб|noob/.test(msg)) return r(["НУБ! Новичок. Все с этого начинали. 😎", "Нуб — не оскорбление, это старт."]);
+            if (/школоло|shkololo/.test(msg)) return r(["ШКОЛОЛО! Школьники. Мы все там были. 😂", "Школоло = школьник. Старый сленг."]);
+            if (/флуд|flood/.test(msg)) return r(["ФЛУД! Спам в чате. Не делай так. 😅", "Флуд — старый сленг."]);
+            if (/баян|bayan/.test(msg)) return r(["БАЯН! Старая шутка. 😂", "Баян = повторил старый мем."]);
+            if (/сорян|soryan/.test(msg)) return r(["СОРЯН! Извини, бро. 😅", "Сорян — старый сленг. Уважение."]);
+            if (/хз|hz/.test(msg)) return r(["ХЗ = не знаю. Олды поймут. 😎", "ХЗ — старый сленг."]);
+            if (/збс|zbs/.test(msg)) return r(["ЗБС! Очень хорошо. 😎 Старая школа!", "Збс = очень хорошо."]);
+            if (/жиза|zhiza/.test(msg)) return r(["ЖИЗА! Жизненно. 😎", "Жиза — когда больно, но правда."]);
+            if (/баг|ошибк|не работает/.test(msg)) return r(["Баг — подсказка, где учиться. Открой F12.", "Ошибка? Ctrl+S, потом F12."]);
+            if (/python|питон/.test(msg)) return r(["Python — лучший старт. Боты, игры, парсеры.", "Питон — швейцарский нож."]);
+            if (/html|css|js|javascript/.test(msg)) return r(["HTML — скелет, CSS — скин, JS — мозги.", "Фронтенд: CSS красит, JS оживляет."]);
+            if (/godot|годот|геймдев/.test(msg)) return r(["Godot — бесплатный движок. CollisionShape2D — главное!", "Ноды в Godot: CharacterBody2D + Sprite2D."]);
+            if (/roblox|роблокс/.test(msg)) return r(["Roblox — Lua и Robux. Мы делали обби.", "Roblox — старт в геймдев."]);
+            if (/cs|pubg|стрелял/.test(msg)) return r(["CS и PUBG — святое! SSG 08 — топ.", "150 пинг? Сочувствую!"]);
+            if (/api|апи/.test(msg)) return r(["API — официант. Просишь — получаешь.", "API — мост между программами."]);
+            if (/хакер|взлом|безопасн/.test(msg)) return r(["Хакеры: White Hat (защита) и Black Hat (тюрьма). Мы — белые.", "Не запускай .exe из интернета!"]);
+            if (/нейросет|chatgpt|deepseek|ии/.test(msg)) return r(["LLM предсказывают слова. Иногда врут.", "ИИ не думает, а предсказывает."]);
+            if (/заработ|деньг|фриланс/.test(msg)) return r(["Школьнику: Roblox, фриланс, стримы. Легально!", "Сначала скилл, потом деньги."]);
+            if (/скучн|устал|лень/.test(msg)) return r(["Представь: через год ты на Бали с заказом на $500. Вайб!", "Устал? Встань, попей воды. Респавн!"]);
+            if (/еда|шавух|голоден/.test(msg)) return r(["Шавуха = зелье HP! 🌯 Имба!", "Еда — топливо. Не чипсы над ноутбуком!"]);
+            if (/школ|домашк|учител/.test(msg)) return r(["Школа — квест. Не зли физручку!", "Быстро сделал — быстрее к коду."]);
+            if (/мем|шутк|смешн/.test(msg)) return r(["Мемы — валюта интернета! Скибиди, сигма, 67.", "Смех продлевает жизнь."]);
+            if (/спасиб/.test(msg)) return r(["Всегда пожалуйста, собутыльник! 🚀", "Не за что, бро! 🤝"]);
+            if (/пока|до свид/.test(msg)) return r(["До связи! 👋", "Пока-пока! 😎"]);
+            if (/кто ты/.test(msg)) return r(["Я ROOT_AI v9.0 — твой цифровой бро. Шарю за код, сленг и English.", "Я бот-помощник. Спрашивай!"]);
+            if (/67/.test(msg)) return r(["67! Респавн принят.", "67 — код. Отдыхай."]);
+            if (/космос|вселенн|марс/.test(msg)) return r(["Вселенной 13.8 млрд лет. Марс — цель Маска.", "Космос — бесконечность. Код нужен и там."]);
+            if (/аниме|годжо|годзё/.test(msg)) return r(["Годжо — легенда! Он сигма!", "Аниме — база."]);
+            if (/спорт|тренировк/.test(msg)) return r(["20 минут в день — и ты в форме. Изи!", "Бег, отжимания, турник — база."]);
+            if (/сон|здоров|глаз/.test(msg)) return r(["20-20-20: каждые 20 мин — 20 сек на 20 шагов.", "Спи 8-9 часов."]);
+            if (/друз|девочк|отношен/.test(msg)) return r(["Друзья — твоя тима. Береги.", "В 12 лет девочки — не срочно."]);
+            if (/будущ|кем стат|професс/.test(msg)) return r(["Геймдизайнер, веб-разработчик. Не бросай код.", "В IT куча профессий."]);
+            if (/родител|мама|папа/.test(msg)) return r(["Родители — админы сервера. Работай на опережение.", "Покажи им сайт для класса!"]);
+            if (/что умееш|помощ/.test(msg)) return r(["Шарю за API, баги, Python, Godot, Roblox, CS, хакеров, заработок, сленг, English и многое другое.", "Спрашивай на любую тему!"]);
+            return r(["Хм, я не знаю. Спроси: 'Что такое API?', 'Что такое сигма?', 'Что такое рофл?'.", "Я бот. Спроси про код, игры или сленг!", "Не понял. Попробуй другую тему!"]);
+        }
+    </script>
+</body>
+</html>
